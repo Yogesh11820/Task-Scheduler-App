@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h2 {
+            color: #333;
+            text-align: center;
+            margin-top: 0;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .logout-button a {
+            display: inline-block;
+            padding: 5px 10px;
+            background-color: rgb(225, 47, 47);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 3px;
+        }
+
+        .logout-button a:hover {
+            background-color: #980303;
+        }
+
+        .button-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 50px;
+        }
+
+        .button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(to bottom right, #ff9a9e, #fad0c4);
+            color: #fff;
+            text-decoration: none;
+            font-size: 16px;
+            padding: 20px;
+            border-radius: 5px;
+            width: 100px;
+            height: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2 style="margin: 0 auto;">Welcome to the Dashboard</h2>
+        <div class="logout-button">
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+    </div>
+
+    <div class="button-container">
+        <div class="button" style="background: linear-gradient(to bottom right, #080808, #5b554f);">Send Mail</div>
+        <div class="button" style="background: linear-gradient(to bottom right, #5716ee, #a30e79);">Task Management</div>
+        <div class="button" style="background: linear-gradient(to bottom right, #216290, #0396FF);">Generate Report</div>
+        <div class="button" style="background: linear-gradient(to bottom right, #077b2a, #6ece85);">Run Script</div>
+    </div>
+</body>
+</html>
