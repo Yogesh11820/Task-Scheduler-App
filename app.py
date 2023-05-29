@@ -6,6 +6,7 @@ from flask_wtf.csrf import CSRFProtect
 from wtforms import StringField, PasswordField
 from wtforms.validators import DataRequired, Email, EqualTo
 from flask_wtf import FlaskForm
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 app = Flask(__name__)
@@ -15,7 +16,18 @@ csrf = CSRFProtect(app)
 
 class User(SQLObject):
     email = StringCol(alternateID=True, unique=True)
-    password = StringCol()
+    password_hash = StringCol()
+    role = StringCol(default="")
+
+    @classmethod
+    def create_user(cls, email, password,role=""):
+        password_hash = generate_password_hash(password)
+        cls(email=email, password_hash=password_hash,role=role)
+
+    def verify_password(self, password):
+        return check_password_hash(self.password_hash, password)
+    
+
 
 db_filename = os.path.abspath('credentials.sqlite')
 connection_string = 'sqlite:' + db_filename
@@ -41,8 +53,11 @@ def login():
         except SQLObjectNotFound:
             return render_template('login.html', error=error,form=request.form)
         
-        if user.password == password:
-            return render_template('dashboard.html')
+        print(user.password_hash)
+
+        if user.verify_password(password):
+            session['username'] = user.email
+            return redirect(url_for('dashboard'))
         
         return render_template('login.html', error=error,form=request.form)
 
@@ -52,6 +67,7 @@ class SignupForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired()])
+    role = StringField('Role',validators=[DataRequired()])
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -60,6 +76,7 @@ def signup():
         email = form.username.data
         password = form.password.data
         confirm_password = form.confirm_password.data
+        role = form.role.data
 
         if User.selectBy(email=email).count() > 0:
             error = 'User already registered. Please choose a different email.'
@@ -69,7 +86,7 @@ def signup():
             error = 'The provided password and confirm password do not match. Please ensure both fields have the same value.'
             return render_template('signup.html', form=form, error=error)
 
-        User(email=email, password=password)
+        User.create_user(email=email, password=password,role=role)
         return redirect(url_for('login'))
 
     return render_template('signup.html', form=form)
@@ -87,8 +104,9 @@ def logout():
 def dashboard():
     if 'username' not in session:
         return redirect(url_for('login'))
-
-    return render_template('dashboard.html')
+    
+    user = User.byEmail(session['username'])
+    return render_template('dashboard.html',user=user)
 
 if __name__ == '__main__':
     app.run(debug=True)

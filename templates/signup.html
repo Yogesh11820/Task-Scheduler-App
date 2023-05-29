@@ -100,6 +100,10 @@
                 <p class="error">{{ form.confirm_password.errors[0] }}</p>
             {% endif %}
         </div>
+        <div class="input-group">
+            <label for="role">Role:</label>
+            <input type="text" id="role" name="role" value="{{ form.role.data or '' }}" required>
+        </div>
         <div>
             <button type="submit">Signup</button>
         </div>

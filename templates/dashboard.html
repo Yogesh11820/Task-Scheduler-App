@@ -61,7 +61,7 @@
 </head>
 <body>
     <div class="header">
-        <h2 style="margin: 0 auto;">Welcome to the Dashboard</h2>
+        <h2 style="margin: 0 auto;">Welcome to the Dashboard, {{ user.email }} ({{ user.role }})</h2>
         <div class="logout-button">
             <a href="{{ url_for('logout') }}">Logout</a>
         </div>
