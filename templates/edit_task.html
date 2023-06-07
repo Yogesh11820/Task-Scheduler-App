@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Edit Task</title>
+</head>
+<body>
+  <h1>Edit Task</h1>
+  <form method="POST" action="{{ url_for('edit_task', task_id=task_id) }}">
+    {{ form.csrf_token }}
+    <div>
+      <label for="task_name">Task Name</label>
+      {{ form.task_name(class="form-control") }}
+    </div>
+    <div>
+      <label for="task_description">Task Description</label>
+      {{ form.task_description(class="form-control") }}
+    </div>
+    <div>
+      <label for="task_duedate">Task Due Date</label>
+      {{ form.task_duedate(class="form-control") }}
+    </div>
+    <div>
+      <label for="task_priority">Task Priority</label>
+      {{ form.task_priority(class="form-control") }}
+    </div>
+    <div>
+      <label for="task_status">Task Status</label>
+      {{ form.task_status(class="form-control") }}
+    </div>
+    <button type="submit" class="btn btn-primary">Update Task</button>
+  </form>
+</body>
+</html>

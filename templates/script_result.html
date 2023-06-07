@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Script Result</title>
+</head>
+<body>
+    <h1>Script Result</h1>
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% else %}
+        <div class="output">{{ output }}</div>
+    {% endif %}
+</body>
+</html>

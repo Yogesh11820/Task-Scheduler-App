@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Send Email</title>
+</head>
+<body>
+  <h1>Send Email</h1>
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <ul class="messages">
+        {% for message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+  <form method="POST" action="{{ url_for('index') }}">
+    {{ form.csrf_token }}
+    <div>
+      <label for="email">Email</label>
+      {{ form.email(class="form-control", id="email") }}
+    </div>
+    <div>
+      <label for="subject">Subject</label>
+      {{ form.Subject(class="form-control", id="subject") }}
+    </div>
+    <div>
+      <label for="body">Body</label>
+      {{ form.Body(class="form-control", id="body") }}
+    </div>
+    <button type="submit" name="submit" value="Send" class="btn btn-primary">Send</button>
+    <button type="submit" name="submit" value="Send after 1 Min" class="btn btn-secondary">Send after 1 Min</button>
+  </form>
+</body>
+</html>

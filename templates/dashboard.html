@@ -68,10 +68,10 @@
     </div>
 
     <div class="button-container">
-        <div class="button" style="background: linear-gradient(to bottom right, #080808, #5b554f);">Send Mail</div>
-        <div class="button" style="background: linear-gradient(to bottom right, #5716ee, #a30e79);">Task Management</div>
-        <div class="button" style="background: linear-gradient(to bottom right, #216290, #0396FF);">Generate Report</div>
-        <div class="button" style="background: linear-gradient(to bottom right, #077b2a, #6ece85);">Run Script</div>
+        <div class="button" style="background: linear-gradient(to bottom right, #080808, #5b554f);"><a href="{{ url_for('index') }}">Send Mail</a></div>
+        <div class="button" style="background: linear-gradient(to bottom right, #5716ee, #a30e79);"><a href="{{ url_for('task_list') }}">Task Management</a></div>
+        <div class="button" style="background: linear-gradient(to bottom right, #216290, #0396FF);"><a href="{{ url_for('system_report') }}">Generate Report</a></div>
+        <div class="button" style="background: linear-gradient(to bottom right, #077b2a, #6ece85);"><a href="{{ url_for('run_script') }}">Run Script</a></div>
     </div>
 </body>
 </html>

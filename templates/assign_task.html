@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Assign Task</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    form {
+      margin-top: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    select {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 5px 10px;
+      background-color: #3338d6;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h1>Assign Task</h1>
+  <form method="POST">
+    {{ form.csrf_token }}
+    <div class="form-group">
+      <label for="assignee_email">Assignee Email:</label>
+      {{ form.assignee_email(class_="form-control") }}
+    </div>
+    <div class="form-group">
+      <label for="task_name">Task Name:</label>
+      {{ form.task_name(class_="form-control") }}
+    </div>
+    <div class="form-group">
+      <label for="task_description">Task Description:</label>
+      {{ form.task_description(class_="form-control") }}
+    </div>
+    <div class="form-group">
+      <label for="task_duedate">Task Due Date:</label>
+      {{ form.task_duedate(class_="form-control") }}
+    </div>
+    <div class="form-group">
+      <label for="task_priority">Task Priority:</label>
+      {{ form.task_priority(class_="form-control") }}
+    </div>
+    <button type="submit">Assign Task</button>
+  </form>
+</body>
+</html>

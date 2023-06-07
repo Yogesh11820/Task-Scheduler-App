@@ -1,24 +1,27 @@
-from flask import Flask, render_template, request, session, flash, redirect, url_for
+from flask import render_template, request, session, flash, redirect, url_for
 from celery import Celery
 from flask_mail import Mail, Message
-import secrets
+import secrets, os
 
 
-app = Flask(__name__)
+from app import app
+
+# app = Flask(__name__)
+# app.secret_key = secrets.token_hex(16)
 
 
-app.secret_key = secrets.token_hex(16)
+#------changes--------
+os.environ.setdefault('FORKED_BY_MULTIPROCESSING', '1')
+#------changes--------
 
-app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
-app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
 
-celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
-#celery.conf.update(app.config)           optional  celery store status and result from task
+celery = Celery(app.name, broker='redis://localhost:6379/0')
+celery.conf.update(app.config)           
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 465
-app.config['MAIL_USE_TLS'] = False
-app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
 app.config['MAIL_USERNAME'] = 'cp258889@gmail.com'
 app.config['MAIL_PASSWORD'] = 'loasojlrnpimgelr'
 app.config['MAIL_DEFAULT_SENDER'] = 'cp258889@gmail.com'
@@ -26,7 +29,7 @@ app.config['MAIL_DEFAULT_SENDER'] = 'cp258889@gmail.com'
 mail = Mail(app)
 
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/mailquick', methods=['GET', 'POST'])
 def index():
     if request.method == 'GET':
         return render_template('index.html', email=session.get('email', ''))
@@ -37,7 +40,9 @@ def index():
         'to': email,
         'body': 'This is a test email sent from a background Celery task.'
     }
+    # import pdb;pdb.set_trace()
     if request.form['submit'] == 'Send':
+        
         send_async_email.delay(email_data)
         flash('Sending email to {0}'.format(email))
     else:
@@ -47,7 +52,7 @@ def index():
     return redirect(url_for('index'))
 
 
-@celery.task(name='app.send_async_email')
+@celery.task(name='send_async_email')
 def send_async_email(email_data):
     print('blah blah')
     """Background task to send an email with Flask-Mail."""
