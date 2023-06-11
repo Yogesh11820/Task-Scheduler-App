@@ -7,78 +7,102 @@
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 20px;
+      background-color: #f4f4f4;
     }
 
-    h1 {
-      color: #333;
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
     }
 
     form {
-      margin-top: 20px;
-    }
-
-    .form-group {
-      margin-bottom: 20px;
+      max-width: 400px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
 
     label {
       display: block;
+      margin-bottom: 10px;
       font-weight: bold;
-      margin-bottom: 5px;
     }
 
-    input[type="text"],
-    textarea {
+    .form-control {
       width: 100%;
       padding: 10px;
       font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      margin-bottom: 10px;
     }
 
-    select {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-    }
-
-    button {
-      padding: 5px 10px;
-      background-color: #3338d6;
+    .btn-primary {
+      background-color: #3cd16b;
       color: #fff;
       border: none;
+      padding: 10px 20px;
       cursor: pointer;
       font-size: 16px;
+      border-radius: 4px;
     }
 
-    button:hover {
+    .btn-primary:hover {
       background-color: #0056b3;
     }
+    .back-button {
+            display: flex;
+            margin-top: 20px;
+        }
+
+        .back-button a {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #333131;
+            color: #f9f6f6;
+            text-decoration: none;
+            border-radius: 3px;
+        }
+
+        .back-button a:hover {
+            background-color: #ccc;
+        }
   </style>
 </head>
 <body>
-  <h1>Assign Task</h1>
+  <div class="header">
+    <h2>Assign Task</h2>
+  </div>
+
   <form method="POST">
     {{ form.csrf_token }}
-    <div class="form-group">
+    <div>
       <label for="assignee_email">Assignee Email:</label>
       {{ form.assignee_email(class_="form-control") }}
     </div>
-    <div class="form-group">
+    <div>
       <label for="task_name">Task Name:</label>
       {{ form.task_name(class_="form-control") }}
     </div>
-    <div class="form-group">
+    <div>
       <label for="task_description">Task Description:</label>
       {{ form.task_description(class_="form-control") }}
     </div>
-    <div class="form-group">
+    <div>
       <label for="task_duedate">Task Due Date:</label>
       {{ form.task_duedate(class_="form-control") }}
     </div>
-    <div class="form-group">
+    <div>
       <label for="task_priority">Task Priority:</label>
       {{ form.task_priority(class_="form-control") }}
     </div>
-    <button type="submit">Assign Task</button>
+    <button type="submit" class="btn btn-primary">Assign Task</button>
+    <div class="back-button">
+      <a href="{{ url_for('task_list') }}">Back</a>
+    </div>
   </form>
 </body>
 </html>

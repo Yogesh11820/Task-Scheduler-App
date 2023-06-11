@@ -13,18 +13,40 @@
       color: #333;
     }
 
-    ul {
-      list-style-type: none;
-      padding: 0;
+    table {
+      width: 100%;
+      border-collapse: collapse;
     }
 
-    li {
-      margin-bottom: 10px;
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #ccc;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+
+    .action-buttons a {
+      display: inline-block;
+      padding: 5px 10px;
+      background-color: #012747;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      text-decoration: none;
+      margin-right: 5px;
+    }
+
+    .action-buttons a:hover {
+      background-color: #0056b3;
     }
 
     button {
       padding: 5px 10px;
-      background-color: #3338d6;
+      background-color: #02548a;
       color: #fff;
       border: none;
       cursor: pointer;
@@ -34,6 +56,22 @@
     button:hover {
       background-color: #0056b3;
     }
+    .back-button {
+            display: inline-block;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        .back-button:hover {
+            background-color: #555;
+        }
   </style>
   <script>
     function confirmDelete(taskId) {
@@ -46,18 +84,29 @@
 </head>
 <body>
   <h1>Task List</h1>
-  <ul>
-    {% for task in tasks %}
-      <li>
-        {{ task.task_name }}
-        <a href="{{ url_for('edit_task', task_id=task.id) }}">Update</a>
-        <a href="#" onclick="confirmDelete('{{ task.id }}')">Delete</a>
-      </li>
-    {% endfor %}
-  </ul>
+  <table>
+    <thead>
+      <tr>
+        <th>Task Name</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for task in tasks %}
+      <tr>
+        <td>{{ task.task_name }}</td>
+        <td class="action-buttons">
+          <a href="{{ url_for('edit_task', task_id=task.id) }}">Update</a>
+          <a href="#" onclick="confirmDelete('{{ task.id }}')">Delete</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
   <button onclick="window.location='/add_task'">Add Task</button>
   <h2>Assign Task</h2>
   <button onclick="window.location='/assign_task'">Assign Task</button>
-
+  <br>
+  <a href="{{ url_for('dashboard') }}" class="back-button">&larr; Back to Dashboard</a>
 </body>
 </html>

@@ -45,6 +45,70 @@
         input[type="submit"]:hover {
             background-color: #45a049;
         }
+
+        .toggle-button {
+            margin-top: 10px;
+        }
+
+        .toggle-button button {
+            display: inline-block;
+            background-color: #3b477c;
+            color: #fff;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: none;
+            cursor: pointer;
+        }
+
+        .toggle-button button:hover {
+            background-color: #4a5584;
+        }
+
+        .toggle-button button:active {
+            background-color: #18222c;
+        }
+
+        .toggle-button button:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(33, 50, 68, 0.4);
+        }
+
+        .back-button {
+            display: inline-block;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        .back-button:hover {
+            background-color: #555;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -62,8 +126,43 @@
             <option value="java">Java</option>
             <option value="javascript">JavaScript</option>
         </select><br>
-
+        
         <input type="submit" value="Run Script">
+        
     </form>
+    <div id="myDiv" class="toggleable-div" style="display:none">
+        <h1>Script Logs</h1>
+        <table>
+            <tr>
+                <th>Filename</th>
+                <th>Language</th>
+                <th>Date & Time</th>
+                <th>Status</th>
+            </tr>
+            {% for script in script_data %}
+            <tr>
+                <td>{{ script.Filename }}</td>
+                <td>{{ script.Language }}</td>
+                <td>{{ script.DateTime }}</td>
+                <td>{{ script.Status }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <div class="toggle-button">
+        <button onclick="toggleDiv()">Toggle Script Logs</button>
+    </div>
+    <br>    
+    <script>
+        function toggleDiv() {
+            var div = document.getElementById("myDiv");
+            if (div.style.display === "none") {
+                div.style.display = "block";
+            } else {
+                div.style.display = "none";
+            }
+        }
+    </script>
+    <a href="{{ url_for('dashboard') }}" class="back-button">&larr; Back to Dashboard</a>
 </body>
 </html>

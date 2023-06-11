@@ -1,6 +1,6 @@
-from flask import Flask, render_template,flash, request, redirect, url_for, session
+from flask import Flask, render_template,flash, request, redirect, url_for, session,send_file
 from sqlobject import *
-import os,platform,psutil,subprocess
+import os,platform,psutil,subprocess,paramiko,re
 from flask_wtf.csrf import CSRFProtect
 from wtforms import StringField, PasswordField,TextAreaField,DateField,SelectField
 from wtforms.validators import DataRequired
@@ -9,6 +9,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from celery import Celery
 from flask_mail import Mail, Message
 from flask_login import login_required,current_user
+from datetime import datetime,timedelta
+import pytz
 
 
 
@@ -126,83 +128,6 @@ def dashboard():
     user = User.byEmail(session['username'])
     return render_template('dashboard.html',user=user)
 
-
-
-
-#-------------------------------------send mail----------------------------
-
-
-os.environ.setdefault('FORKED_BY_MULTIPROCESSING', '1')                 
-
-
-celery = Celery(app.name, broker='redis://localhost:6379/0')
-celery.conf.update(app.config)           
-
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USE_SSL'] = False
-app.config['MAIL_USERNAME'] = 'cp258889@gmail.com'
-app.config['MAIL_PASSWORD'] = 'loasojlrnpimgelr'
-app.config['MAIL_DEFAULT_SENDER'] = 'cp258889@gmail.com'
-
-mail = Mail(app)
-
-class Mailbody(FlaskForm):
-    email = StringField('Task Name', validators=[DataRequired()])
-    Subject = TextAreaField('Subject', validators=[DataRequired()])
-    Body = TextAreaField('Body', validators=[DataRequired()])
-
-
-
-
-@app.route('/mailquick', methods=['GET', 'POST'])
-def index():
-    form = Mailbody()
-
-    if request.method == 'GET':
-        return render_template('index.html', form = form, email=session.get('email', ''))
-    
-    if form.validate_on_submit():
-        email = form.email.data
-        session['email'] = email
-        subject = form.Subject.data
-        body = form.Body.data
-
-        email_data = {
-            'subject': subject,
-            'to': email,
-            'body': body
-        }
-
-        if request.form['submit'] == 'Send':
-            send_async_email.delay(email_data)
-            flash('Sending email to {0}'.format(email))
-        else:
-            send_async_email.apply_async(args=[email_data], countdown=60)
-            flash('An email will be sent to {0} in one minute'.format(email))
-
-        return redirect(url_for('index'))
-
-    return render_template('index.html', form=form)
-
-
-@celery.task(name='send_async_email')
-def send_async_email(email_data):
-    print('blah blah')
-
-    #background task
-
-    msg = Message(email_data['subject'],
-                  sender=app.config['MAIL_DEFAULT_SENDER'],
-                  recipients=[email_data['to']])
-    msg.body = email_data['body']
-    with app.app_context():
-         
-         try:
-            mail.send(msg)
-         except Exception as e:
-            print(f"An error occurred while sending the email: {str(e)}")
 
 
 #-------------------------------Task management-----------------------------------------
@@ -340,41 +265,255 @@ def delete_task(task_id):
 #----------------report generation---------
 
 
+@app.route("/system_report")
+def system_report():
+    
+    user = 'chetan'
+    password = 'chetan'
+    port = 22
+    host = '192.168.2.200'
+
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    client.connect(host, port, user,password)  
+
+    command = "hostname; uname -a; df -h; a; ip addr show eth0; lscpu; lsblk"
+
+
+    #GET http://localhost:5000/system_info?user=laptop-3cn3kh55\yogesh&host=192.168.2.200&port=22
+
+
+    stdin, stdout, stderr = client.exec_command(command)
+    output = stdout.read().decode("utf-8")
+    try:
+        if os.path.exists('systemdata.txt'):
+           os.remove('systemdata.txt')
+           with open('systemdata.txt', 'w', encoding='utf-8') as file:
+                file.write(output)
+    except Exception as e:
+         print("An error occurred while writing to the file:", str(e))
+
+    client.close()
+    
+    #-----output----
+    
+    
+    with open('systemdata.txt', 'r') as file:
+       system_info = file.read()
+
+    architecture_info = re.search(r'(?<=Architecture:)\s*(.*\S)', system_info).group(1).strip()
+
+    processor_info = re.search(r'(?<=Model name:)\s*(.*\S)', system_info).group(1).strip()
+    #---output----
+
+    system_info = {}
+    system_info["Hostname"] = output.splitlines()[0]
+    system_info["Operating_system"] = output.splitlines()[1].split(" ")[0]
+    system_info["OS Version"] = output.splitlines()[1].split(" ")[2]
+    system_info["Processor"] =  processor_info
+    system_info['Architecture'] = architecture_info
+    system_info["ip_address"] = host
+
+    return render_template('system_report.html', system_info=system_info,filename='systemdata.txt')
+
+@app.route("/download_file/<filename>")
+def download_file(filename):
+    return send_file(filename, as_attachment=True)
+
+
+
 
 #----------run script--------
 
+class ScriptData(SQLObject):
+    Runby = StringCol()
+    Filename = StringCol()
+    Language = StringCol()
+    DateTime = DateTimeCol()
+    Status = StringCol()
+
+ScriptData.createTable(ifNotExists=True)
 
 @app.route('/run_script', methods=['GET', 'POST'])
 def run_script():
+    login_user = User.byEmail(session['username'])
+
+    user_name = login_user.email
+
+    script_data = ScriptData.selectBy(Runby=user_name)
+
+    print(script_data)
+
     if request.method == 'POST':
         script_file = request.files['script']
         script_language = request.form['language']
 
-        supported_languages = {
-            'python': ['python', '_script.py'],
-            'go': ['go', '_script.go'],
-            'ruby': ['ruby', '_script.rb'],
-            'java': ['java', '_script.java'],
-            'javascript': ['node', '_script.js']
-        }
+        # supported_languages = {
+        #     'python': ['python', 'script_.py'],
+        #     'go': ['go', 'script_.go'],
+        #     'ruby': ['ruby', 'script_.rb'],
+        #     'java': ['java', 'script_.java'],
+        #     'javascript': ['node', 'script_.js']
+        # }
 
-        if script_file and script_file.filename.endswith('.py') and script_language in supported_languages:
-            temp_file = f'_script.{script_language}'
+        if script_file and script_file.filename.endswith('.py'):
+            temp_file = 'script_.py'
             script_file.save(temp_file)
 
             try:
-                command = supported_languages[script_language]
+                command = ['python', temp_file]
                 process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 output, error = process.communicate()
                 output = output.decode('utf-8')
                 error = error.decode('utf-8')
 
-                return render_template('script_result.html', output=output, error=error)
+                print(process.returncode)       # 0 --> success
+
+                result = 'SUCCESS'
+                if process.returncode:
+                    result = 'FAILED'
+                
+                login_user = User.byEmail(session['username'])
+                print(login_user.email)
+                stat = ScriptData(
+                    Runby=login_user.email,
+                    Filename=script_file.filename,
+                    Language=script_language,
+                    DateTime=datetime.now(),
+                    Status=result,
+                )
+                
+                login_user = User.byEmail(session['username'])
+
+                user_name = login_user.email
+
+                script_data = ScriptData.selectBy(Runby=user_name)
+
+                print(script_data)
+
+
+                return render_template('script_result.html', output=output, error=error, script_data=script_data)
             except Exception as e:
                 error = str(e)
                 return render_template('script_result.html', error=error)
 
-    return render_template('run_script.html')
+    return render_template('run_script.html', script_data=script_data)
+
+#-------mail updated------
+
+
+def make_celery(app):
+    celery = Celery(
+        app.import_name,
+        backend=app.config['CELERY_RESULT_BACKEND'],
+        broker=app.config['CELERY_BROKER_URL']
+    )
+    celery.conf.update(app.config)
+
+    class ContextTask(celery.Task):
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return self.run(*args, **kwargs)
+
+    celery.Task = ContextTask
+    return celery
+
+
+app.config.update(
+    CELERY_BROKER_URL='redis://localhost:6379',
+    CELERY_RESULT_BACKEND='redis://localhost:6379'
+)
+celery = make_celery(app)
+
+
+
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
+app.config['MAIL_USERNAME'] = 'cp258889@gmail.com'
+app.config['MAIL_PASSWORD'] = 'loasojlrnpimgelr'
+app.config['MAIL_DEFAULT_SENDER'] = 'cp258889@gmail.com'
+
+mail = Mail(app)
+
+class Mailbody(FlaskForm):
+    email = StringField('Task Name', validators=[DataRequired()])
+    Subject = TextAreaField('Subject', validators=[DataRequired()])
+    Body = TextAreaField('Body', validators=[DataRequired()])
+
+
+@app.route('/mailquick',methods=['GET','POST'])
+def index():
+    form = Mailbody()
+
+    if request.method == 'GET':
+        return render_template('index.html', form = form, email=session.get('email', ''))
+    
+    if form.validate_on_submit():
+        email = form.email.data
+        session['email'] = email
+        subject = form.Subject.data
+        body = form.Body.data
+
+        email_data = {
+            'subject': subject,
+            'to': email,
+            'body': body
+        }
+        
+        print(email_data)
+        
+        
+        if request.form['submit'] == 'Send':
+            print('its working')
+            try:
+                send_async_email.delay(email_data)
+                flash('Sending email to {0}'.format(email))
+            except Exception as e:
+                print(e)
+
+        elif request.form['submit'] == 'Send afer 1 Min':
+            send_async_email.apply_async(args=[email_data], countdown=60)
+            flash('An email will be sent to {0} in one minute'.format(email))
+        
+        elif request.form['submit'] == 'Schedule Mail':
+            try:
+                india_timezone = pytz.timezone('ASIA/KOLKATA')
+                datetime_input = '2023-6-9 18:59'
+                scheduled_datetime = india_timezone.localize(datetime.strptime(datetime_input, "%Y-%m-%d %H:%M"))
+
+                
+                time_difference = scheduled_datetime - datetime.now(india_timezone)
+
+                print(datetime.now(india_timezone))
+                print(time_difference.total_seconds())
+                exit()
+                send_async_email.apply_async(args=[email_data], countdown=time_difference.total_seconds())
+                flash('Email scheduled for {}'.format(scheduled_datetime))
+            except Exception as e:
+                print(e)
+         
+        return redirect(url_for('index'))
+
+    return render_template('index.html', form=form)
+
+
+@celery.task(name='send_async_email')
+def send_async_email(email_data):
+    print('Great Success!!')
+
+
+    msg = Message(email_data['subject'],
+                  sender=app.config['MAIL_DEFAULT_SENDER'],
+                  recipients=[email_data['to']])
+    msg.body = email_data['body']
+    with app.app_context():
+         
+         try:
+            mail.send(msg)
+         except Exception as e:
+            print(f"An error occurred while sending the email: {str(e)}")
 
 
 

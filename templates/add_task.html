@@ -7,16 +7,26 @@
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 20px;
+      background-color: #f4f4f4;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
     }
 
     form {
       max-width: 400px;
       margin: 0 auto;
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
 
     label {
       display: block;
-      margin-bottom: 5px;
+      margin-bottom: 10px;
       font-weight: bold;
     }
 
@@ -31,46 +41,65 @@
     }
 
     .btn-primary {
-      background-color: #007bff;
+      background-color: #3cd16b;
       color: #fff;
       border: none;
       padding: 10px 20px;
       cursor: pointer;
       font-size: 16px;
+      border-radius: 4px;
     }
 
     .btn-primary:hover {
       background-color: #0056b3;
     }
+    .back-button {
+            display: flex;
+            margin-top: 20px;
+        }
+
+        .back-button a {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #333131;
+            color: #f9f6f6;
+            text-decoration: none;
+            border-radius: 3px;
+        }
+
+        .back-button a:hover {
+            background-color: #ccc;
+        }
   </style>
 </head>
 <body>
-    <div class="header">
-        <h2 style="margin: 0 auto;">New Task</h2>
-    </div>
-
-
-
+  <div class="header">
+    <h2>New Task</h2>
+  </div>
 
   <form method="POST" action="{{ url_for('add_task') }}">
     {{ form.csrf_token }}
     <div>
-        <label for="task_name">Task Name</label>
-        {{ form.task_name(class="form-control") }}
+      <label for="task_name">Task Name</label>
+      {{ form.task_name(class="form-control") }}
     </div>
     <div>
-        <label for="task_description">Task Description</label>
-        {{ form.task_description(class="form-control") }}
+      <label for="task_description">Task Description</label>
+      {{ form.task_description(class="form-control") }}
     </div>
     <div>
-        <label for="task_duedate">Task Due Date</label>
-        {{ form.task_duedate(class="form-control") }}
+      <label for="task_duedate">Task Due Date</label>
+      {{ form.task_duedate(class="form-control") }}
     </div>
     <div>
-        <label for="task_priority">Task Priority</label>
-        {{ form.task_priority(class="form-control") }}
+      <label for="task_priority">Task Priority</label>
+      {{ form.task_priority(class="form-control") }}
     </div>
     <button type="submit" class="btn btn-primary">Submit</button>
+    <div class="back-button">
+      <a href="{{ url_for('task_list') }}">Back</a>
+  </div>
   </form>
+  
 </body>
 </html>

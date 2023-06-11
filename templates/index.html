@@ -2,6 +2,81 @@
 <html>
 <head>
   <title>Send Email</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    form {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 5px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .form-control {
+      width: 40%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    .btn {
+      display: inline-block;
+      background-color: #4CAF50;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      text-align: center;
+      text-decoration: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+
+    .btn-secondary {
+      background-color: #808080;
+    }
+
+    .messages {
+      list-style-type: none;
+      padding: 0;
+      margin-bottom: 20px;
+    }
+
+    .messages li {
+      color: #ff0000;
+    }
+
+    .back-button {
+      display: inline-block;
+      background-color: #333;
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      text-align: center;
+      text-decoration: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    .back-button:hover {
+      background-color: #555;
+    }
+  </style>
 </head>
 <body>
   <h1>Send Email</h1>
@@ -28,8 +103,14 @@
       <label for="body">Body</label>
       {{ form.Body(class="form-control", id="body") }}
     </div>
+    <div>
+      <label for="body">Date & Time</label>
+      {{ form.Body(class="form-control", id="body",placeholder='Y-m-d H:M   2023-1-20 1:2') }}
+    </div>
     <button type="submit" name="submit" value="Send" class="btn btn-primary">Send</button>
     <button type="submit" name="submit" value="Send after 1 Min" class="btn btn-secondary">Send after 1 Min</button>
+    <button type="submit" name="submit" value="Schedule Mail" class="btn btn-secondary">Schedule Mail</button>
   </form>
+  <a href="{{ url_for('dashboard') }}" class="back-button">&larr; Back to Dashboard</a>
 </body>
 </html>

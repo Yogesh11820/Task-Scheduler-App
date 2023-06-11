@@ -2,6 +2,50 @@
 <html>
 <head>
   <title>Edit Task</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    form {
+      max-width: 400px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    .form-control {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      margin-bottom: 10px;
+    }
+    .btn {
+      background-color: #4caf50;
+      color: #ffffff;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn:hover {
+      background-color: #45a049;
+    }
+  </style>
 </head>
 <body>
   <h1>Edit Task</h1>
@@ -27,7 +71,7 @@
       <label for="task_status">Task Status</label>
       {{ form.task_status(class="form-control") }}
     </div>
-    <button type="submit" class="btn btn-primary">Update Task</button>
+    <button type="submit" class="btn">Update Task</button>
   </form>
 </body>
 </html>
