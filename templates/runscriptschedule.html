@@ -113,23 +113,16 @@
     </style>
 </head>
 <body>
-    <h1>Run Script</h1>
-    <form method="POST" action="/run_script" enctype="multipart/form-data">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-        <label for="script">Select Script File:</label>
-        <input type="file" id="script" name="script"><br>
-
-        <label for="language">Select Script Language:</label>
-        <select id="language" name="language">
-            <option value="python">Python</option>
-            <option value="go">Go</option>
-            <option value="ruby">Ruby</option>
-            <option value="java">Java</option>
-            <option value="javascript">JavaScript</option>
-        </select><br>
-        
-        <input type="submit" value="Run Script">
-        
+    <h1>Run Script - Scheduler</h1>
+    <form method="POST" action="/schedulerunscript" enctype="multipart/form-data">
+        {{ form.csrf_token }}
+        {{ form.script.label }} {{ form.script }}
+        <br>
+        {{ form.language.label }} {{ form.language }}
+        <br>
+        {{ form.schedule.label }} {{ form.schedule }}
+        <br><br>
+        <input type="submit" name="submit" value="Run Script">
     </form>
     <div id="myDiv" class="toggleable-div" style="display:none">
         <h1>Script Logs</h1>
@@ -137,8 +130,6 @@
             <tr>
                 <th>Filename</th>
                 <th>Language</th>
-                <th>Script</th>
-                <th>Report</th>
                 <th>Date & Time</th>
                 <th>Status</th>
             </tr>
@@ -146,16 +137,6 @@
             <tr>
                 <td>{{ script.Filename }}</td>
                 <td>{{ script.Language }}</td>
-                <td>
-                    <div class="download-button">
-                        <a href="{{ url_for('download_scriptcode', script_id=script.id) }}">Download Script</a>
-                    </div> 
-                </td>
-                <td>
-                    <div class="download-button">
-                        <a href="{{ url_for('download_scriptreport', script_id=script.id) }}">Download Report</a>
-                    </div> 
-                </td>
                 <td>{{ script.DateTime }}</td>
                 <td>{{ script.Status }}</td>
             </tr>

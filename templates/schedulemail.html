@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Schedule Email</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f2f2f2;
+        margin: 0;
+        padding: 20px;
+      }
+
+      h1 {
+        color: #333;
+      }
+
+      form {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 5px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 10px;
+      }
+
+      /* input[type="text"],
+      select {
+        width: 40%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        margin-bottom: 10px;
+      } */
+      
+      .form-control {
+      width: 40%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+      input[type="submit"] {
+        background-color: #4caf50;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      input[type="submit"]:hover {
+        background-color: #45a049;
+      }
+      .back-button {
+            display: flex;
+            margin-top: 20px;
+        }
+
+        .back-button a {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #ddd;
+            color: #333;
+            text-decoration: none;
+            border-radius: 3px;
+        }
+
+        .back-button a:hover {
+            background-color: #ccc;
+        }
+        .toggle-button {
+            margin-top: 10px;
+        }
+
+        .toggle-button button {
+            display: inline-block;
+            background-color: #3b477c;
+            color: #fff;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: none;
+            cursor: pointer;
+        }
+
+        .toggle-button button:hover {
+            background-color: #4a5584;
+        }
+
+        .toggle-button button:active {
+            background-color: #18222c;
+        }
+
+        .toggle-button button:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(33, 50, 68, 0.4);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+    </style>
+  </head>
+  <body>
+    <h1>Schedule Email</h1>
+    <form method="POST" action="{{ url_for('schedulemail') }}">
+      {{ form.csrf_token }}
+      <div>
+        <label for="email">Email</label>
+        {{form.email(class="form-control", id="email") }}
+      </div>
+      <div>
+        <label for="subject">Subject</label>
+        {{ form.Subject(class="form-control", id="subject") }}
+      </div>
+      <div>
+        <label for="body">Body</label>
+        {{ form.Body(class="form-control", id="body") }}
+      </div>
+      <div>
+        <label for="Schedule">Date & Time</label>
+        {{ form.Schedule(class="form-control", id="Schedule") }}
+      </div>
+      <br>
+      <div>
+        <input type="submit" name="submit" value="Schedule Mail">
+      </div>
+    </form>
+    <div id="myDiv" class="toggleable-div" style="display:none">
+      <h1>Mail History</h1>
+      <table>
+          <tr>
+              <th>SrNo</th>
+              <th>Sender</th>
+              <th>Recipient</th>
+              <th>ScheduledTime</th>
+              <th>Status</th>
+          </tr>
+          {% for mail in mail_logs %}
+          <tr>
+              <td>{{mail.id}}</td>
+              <td>{{ mail.Sender }}</td>
+              <td>{{ mail.Recipient }}</td>
+              <td>{{ mail.Scheduledtime }}</td>
+              <td>{{ mail.Status }}</td>
+          </tr>
+          {% endfor %}
+      </table>
+  </div>
+  <div class="toggle-button">
+      <button onclick="toggleDiv()">Mail Logs</button>
+  </div>
+  <br>    
+  <script>
+      function toggleDiv() {
+          var div = document.getElementById("myDiv");
+          if (div.style.display === "none") {
+              div.style.display = "block";
+          } else {
+              div.style.display = "none";
+          }
+      }
+  </script>
+    <div class="back-button">
+      <a href="{{ url_for('index') }}">Back</a>
+  </div>
+  </body>
+  </html>
+  </body>
+</html>

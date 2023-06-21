@@ -1,57 +1,56 @@
 josh-Latitude-3510
-Linux josh-Latitude-3510 5.15.0-73-generic #80~20.04.1-Ubuntu SMP Wed May 17 14:58:14 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux
+Linux josh-Latitude-3510 5.15.0-75-generic #82~20.04.1-Ubuntu SMP Wed Jun 7 19:37:37 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux
 Filesystem      Size  Used Avail Use% Mounted on
 udev            7.7G     0  7.7G   0% /dev
-tmpfs           1.6G  2.7M  1.6G   1% /run
-/dev/nvme0n1p2  468G  106G  339G  24% /
-tmpfs           7.7G  769M  7.0G  10% /dev/shm
+tmpfs           1.6G  2.3M  1.6G   1% /run
+/dev/nvme0n1p2  468G  105G  340G  24% /
+tmpfs           7.7G  118M  7.6G   2% /dev/shm
 tmpfs           5.0M  4.0K  5.0M   1% /run/lock
 tmpfs           7.7G     0  7.7G   0% /sys/fs/cgroup
 /dev/loop0      128K  128K     0 100% /snap/bare/5
-/dev/loop1      117M  117M     0 100% /snap/core/14784
-/dev/loop3       64M   64M     0 100% /snap/core20/1891
-/dev/loop2       56M   56M     0 100% /snap/core18/2745
-/dev/loop5      323M  323M     0 100% /snap/wine-platform-6-stable/14
-/dev/loop6       56M   56M     0 100% /snap/core18/2751
-/dev/loop8       92M   92M     0 100% /snap/gtk-common-themes/1535
-/dev/loop12     350M  350M     0 100% /snap/gnome-3-38-2004/137
-/dev/loop13     112M  112M     0 100% /snap/slack/71
-/dev/loop7      219M  219M     0 100% /snap/gnome-3-34-1804/90
-/dev/loop11     117M  117M     0 100% /snap/core/14946
-/dev/loop15     6.2M  6.2M     0 100% /snap/notepad-plus-plus/386
-/dev/loop10      19M   19M     0 100% /snap/node/4146
-/dev/loop18      82M   82M     0 100% /snap/gtk-common-themes/1534
-/dev/loop14     6.3M  6.3M     0 100% /snap/notepad-plus-plus/385
-/dev/loop17     130M  130M     0 100% /snap/mysql-workbench-community/10
-/dev/loop19     189M  189M     0 100% /snap/postman/206
+/dev/loop2       56M   56M     0 100% /snap/core18/2751
+/dev/loop3       56M   56M     0 100% /snap/core18/2785
+/dev/loop4      117M  117M     0 100% /snap/core/14946
+/dev/loop5       64M   64M     0 100% /snap/core20/1950
+/dev/loop11     461M  461M     0 100% /snap/gnome-42-2204/105
+/dev/loop8      219M  219M     0 100% /snap/gnome-3-34-1804/93
+/dev/loop6       74M   74M     0 100% /snap/core22/634
+/dev/loop7       74M   74M     0 100% /snap/core22/750
+/dev/loop9      350M  350M     0 100% /snap/gnome-3-38-2004/137
+/dev/loop10     350M  350M     0 100% /snap/gnome-3-38-2004/140
+/dev/loop14     219M  219M     0 100% /snap/gnome-3-34-1804/90
+/dev/loop13     165M  165M     0 100% /snap/gnome-3-28-1804/194
+/dev/loop17      64M   64M     0 100% /snap/core20/1891
+/dev/loop21      82M   82M     0 100% /snap/gtk-common-themes/1534
+/dev/loop25     6.3M  6.3M     0 100% /snap/notepad-plus-plus/385
+/dev/loop29     113M  113M     0 100% /snap/slack/79
+/dev/loop28     112M  112M     0 100% /snap/slack/71
+/dev/loop19     467M  467M     0 100% /snap/gnome-42-2204/111
+/dev/loop27     321M  321M     0 100% /snap/vlc/3078
+/dev/loop23     189M  189M     0 100% /snap/postman/184
+/dev/loop20     130M  130M     0 100% /snap/mysql-workbench-community/10
+/dev/loop26      46M   46M     0 100% /snap/snap-store/638
+/dev/loop18     6.2M  6.2M     0 100% /snap/notepad-plus-plus/386
+/dev/loop12     165M  165M     0 100% /snap/gnome-3-28-1804/198
 /dev/loop22     296M  296M     0 100% /snap/vlc/2344
-/dev/loop9      176M  176M     0 100% /snap/mysql-workbench-community/12
-/dev/loop16     189M  189M     0 100% /snap/postman/184
-/dev/loop21     348M  348M     0 100% /snap/wine-platform-runtime/347
-/dev/loop28     350M  350M     0 100% /snap/gnome-3-38-2004/140
-/dev/loop34     490M  490M     0 100% /snap/wine-platform-runtime-core20/71
-/dev/loop40     452M  452M     0 100% /snap/wine-platform-7-devel-core20/23
-/dev/loop38     321M  321M     0 100% /snap/vlc/3078
-/dev/loop29     461M  461M     0 100% /snap/gnome-42-2204/102
-/dev/loop37      13M   13M     0 100% /snap/snap-store/959
-/dev/loop26      74M   74M     0 100% /snap/core22/634
-/dev/loop30     165M  165M     0 100% /snap/gnome-3-28-1804/194
-/dev/loop27     219M  219M     0 100% /snap/gnome-3-34-1804/93
-/dev/loop36      54M   54M     0 100% /snap/snapd/19122
-/dev/loop33     454M  454M     0 100% /snap/wine-platform-7-devel-core20/24
-/dev/loop35      46M   46M     0 100% /snap/snap-store/638
-/dev/loop31      64M   64M     0 100% /snap/core20/1879
-/dev/loop25     165M  165M     0 100% /snap/gnome-3-28-1804/198
-/dev/loop39     323M  323M     0 100% /snap/wine-platform-6-stable/19
+/dev/loop16     323M  323M     0 100% /snap/wine-platform-6-stable/19
+/dev/loop15     323M  323M     0 100% /snap/wine-platform-6-stable/14
+/dev/loop33      19M   19M     0 100% /snap/node/4146
+/dev/loop24     189M  189M     0 100% /snap/postman/206
+/dev/loop31      92M   92M     0 100% /snap/gtk-common-themes/1535
+/dev/loop35      54M   54M     0 100% /snap/snapd/19361
+/dev/loop36      13M   13M     0 100% /snap/snap-store/959
+/dev/loop30     176M  176M     0 100% /snap/mysql-workbench-community/12
+/dev/loop32     452M  452M     0 100% /snap/wine-platform-7-devel-core20/23
+/dev/loop37     454M  454M     0 100% /snap/wine-platform-7-devel-core20/24
+/dev/loop38     348M  348M     0 100% /snap/wine-platform-runtime/348
+/dev/loop39     348M  348M     0 100% /snap/wine-platform-runtime/349
+/dev/loop40     492M  492M     0 100% /snap/wine-platform-runtime-core20/73
+/dev/loop41     489M  489M     0 100% /snap/wine-platform-runtime-core20/72
 /dev/nvme0n1p1  511M   42M  470M   9% /boot/efi
-tmpfs           1.6G  108K  1.6G   1% /run/user/1001
-/dev/loop41      54M   54M     0 100% /snap/snapd/19361
-/dev/loop32      74M   74M     0 100% /snap/core22/750
-/dev/loop4      113M  113M     0 100% /snap/slack/79
-/dev/loop20     348M  348M     0 100% /snap/wine-platform-runtime/348
-/dev/loop23     489M  489M     0 100% /snap/wine-platform-runtime-core20/72
-/dev/loop24     461M  461M     0 100% /snap/gnome-42-2204/105
-tmpfs           1.6G  8.0K  1.6G   1% /run/user/1000
+tmpfs           1.6G   80K  1.6G   1% /run/user/1001
+/dev/loop42      54M   54M     0 100% /snap/snapd/19457
+/dev/loop34     119M  119M     0 100% /snap/core/15419
 Architecture:                    x86_64
 CPU op-mode(s):                  32-bit, 64-bit
 Byte Order:                      Little Endian
@@ -91,47 +90,47 @@ Vulnerability Tsx async abort:   Not affected
 Flags:                           fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb invpcid_single ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow vnmi flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid mpx rdseed adx smap clflushopt intel_pt xsaveopt xsavec xgetbv1 xsaves dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp md_clear flush_l1d arch_capabilities
 NAME        MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT
 loop0         7:0    0     4K  1 loop /snap/bare/5
-loop1         7:1    0 116.8M  1 loop /snap/core/14784
-loop2         7:2    0  55.7M  1 loop /snap/core18/2745
-loop3         7:3    0  63.5M  1 loop /snap/core20/1891
-loop4         7:4    0   112M  1 loop /snap/slack/79
-loop5         7:5    0 322.9M  1 loop /snap/wine-platform-6-stable/14
-loop6         7:6    0  55.7M  1 loop /snap/core18/2751
-loop7         7:7    0 218.4M  1 loop /snap/gnome-3-34-1804/90
-loop8         7:8    0  91.7M  1 loop /snap/gtk-common-themes/1535
-loop9         7:9    0 175.9M  1 loop /snap/mysql-workbench-community/12
-loop10        7:10   0    19M  1 loop /snap/node/4146
-loop11        7:11   0 116.8M  1 loop /snap/core/14946
-loop12        7:12   0 349.7M  1 loop /snap/gnome-3-38-2004/137
-loop13        7:13   0 111.9M  1 loop /snap/slack/71
-loop14        7:14   0   6.2M  1 loop /snap/notepad-plus-plus/385
-loop15        7:15   0   6.1M  1 loop /snap/notepad-plus-plus/386
-loop16        7:16   0 188.4M  1 loop /snap/postman/184
-loop17        7:17   0 129.9M  1 loop /snap/mysql-workbench-community/10
-loop18        7:18   0  81.3M  1 loop /snap/gtk-common-themes/1534
-loop19        7:19   0 188.9M  1 loop /snap/postman/206
-loop20        7:20   0   347M  1 loop /snap/wine-platform-runtime/348
-loop21        7:21   0 347.1M  1 loop /snap/wine-platform-runtime/347
+loop2         7:2    0  55.7M  1 loop /snap/core18/2751
+loop3         7:3    0  55.7M  1 loop /snap/core18/2785
+loop4         7:4    0 116.8M  1 loop /snap/core/14946
+loop5         7:5    0  63.5M  1 loop /snap/core20/1950
+loop6         7:6    0  73.1M  1 loop /snap/core22/634
+loop7         7:7    0  73.9M  1 loop /snap/core22/750
+loop8         7:8    0 218.4M  1 loop /snap/gnome-3-34-1804/93
+loop9         7:9    0 349.7M  1 loop /snap/gnome-3-38-2004/137
+loop10        7:10   0 349.7M  1 loop /snap/gnome-3-38-2004/140
+loop11        7:11   0 460.7M  1 loop /snap/gnome-42-2204/105
+loop12        7:12   0 164.8M  1 loop /snap/gnome-3-28-1804/198
+loop13        7:13   0 164.8M  1 loop /snap/gnome-3-28-1804/194
+loop14        7:14   0 218.4M  1 loop /snap/gnome-3-34-1804/90
+loop15        7:15   0 322.9M  1 loop /snap/wine-platform-6-stable/14
+loop16        7:16   0   323M  1 loop /snap/wine-platform-6-stable/19
+loop17        7:17   0  63.5M  1 loop /snap/core20/1891
+loop18        7:18   0   6.1M  1 loop /snap/notepad-plus-plus/386
+loop19        7:19   0 466.6M  1 loop /snap/gnome-42-2204/111
+loop20        7:20   0 129.9M  1 loop /snap/mysql-workbench-community/10
+loop21        7:21   0  81.3M  1 loop /snap/gtk-common-themes/1534
 loop22        7:22   0 295.7M  1 loop /snap/vlc/2344
-loop23        7:23   0   489M  1 loop /snap/wine-platform-runtime-core20/72
-loop24        7:24   0 460.7M  1 loop /snap/gnome-42-2204/105
-loop25        7:25   0 164.8M  1 loop /snap/gnome-3-28-1804/198
-loop26        7:26   0  73.1M  1 loop /snap/core22/634
-loop27        7:27   0 218.4M  1 loop /snap/gnome-3-34-1804/93
-loop28        7:28   0 349.7M  1 loop /snap/gnome-3-38-2004/140
-loop29        7:29   0 460.6M  1 loop /snap/gnome-42-2204/102
-loop30        7:30   0 164.8M  1 loop /snap/gnome-3-28-1804/194
-loop31        7:31   0  63.3M  1 loop /snap/core20/1879
-loop32        7:32   0  73.9M  1 loop /snap/core22/750
-loop33        7:33   0 453.1M  1 loop /snap/wine-platform-7-devel-core20/24
-loop34        7:34   0 489.1M  1 loop /snap/wine-platform-runtime-core20/71
-loop35        7:35   0    46M  1 loop /snap/snap-store/638
-loop36        7:36   0  53.2M  1 loop /snap/snapd/19122
-loop37        7:37   0  12.3M  1 loop /snap/snap-store/959
-loop38        7:38   0 320.4M  1 loop /snap/vlc/3078
-loop39        7:39   0   323M  1 loop /snap/wine-platform-6-stable/19
-loop40        7:40   0   452M  1 loop /snap/wine-platform-7-devel-core20/23
-loop41        7:41   0  53.3M  1 loop /snap/snapd/19361
+loop23        7:23   0 188.4M  1 loop /snap/postman/184
+loop24        7:24   0 188.9M  1 loop /snap/postman/206
+loop25        7:25   0   6.2M  1 loop /snap/notepad-plus-plus/385
+loop26        7:26   0    46M  1 loop /snap/snap-store/638
+loop27        7:27   0 320.4M  1 loop /snap/vlc/3078
+loop28        7:28   0 111.9M  1 loop /snap/slack/71
+loop29        7:29   0   112M  1 loop /snap/slack/79
+loop30        7:30   0 175.9M  1 loop /snap/mysql-workbench-community/12
+loop31        7:31   0  91.7M  1 loop /snap/gtk-common-themes/1535
+loop32        7:32   0   452M  1 loop /snap/wine-platform-7-devel-core20/23
+loop33        7:33   0    19M  1 loop /snap/node/4146
+loop34        7:34   0 118.2M  1 loop /snap/core/15419
+loop35        7:35   0  53.3M  1 loop /snap/snapd/19361
+loop36        7:36   0  12.3M  1 loop /snap/snap-store/959
+loop37        7:37   0 453.1M  1 loop /snap/wine-platform-7-devel-core20/24
+loop38        7:38   0   347M  1 loop /snap/wine-platform-runtime/348
+loop39        7:39   0 347.2M  1 loop /snap/wine-platform-runtime/349
+loop40        7:40   0 491.6M  1 loop /snap/wine-platform-runtime-core20/73
+loop41        7:41   0   489M  1 loop /snap/wine-platform-runtime-core20/72
+loop42        7:42   0  53.3M  1 loop /snap/snapd/19457
 nvme0n1     259:0    0   477G  0 disk 
 ├─nvme0n1p1 259:1    0   512M  0 part /boot/efi
 └─nvme0n1p2 259:2    0 476.4G  0 part /

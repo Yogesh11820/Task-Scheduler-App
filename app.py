@@ -1,16 +1,18 @@
-from flask import Flask, render_template,flash, request, redirect, url_for, session,send_file
+from flask import Flask, render_template,flash, request, redirect, url_for, session,send_file,jsonify,current_app,make_response
 from sqlobject import *
-import os,platform,psutil,subprocess,paramiko,re
+import os,subprocess,paramiko,re
 from flask_wtf.csrf import CSRFProtect
-from wtforms import StringField, PasswordField,TextAreaField,DateField,SelectField
-from wtforms.validators import DataRequired
+from wtforms import StringField, PasswordField,FileField,TextAreaField,DateField,SelectField, DateTimeLocalField,IntegerField,TimeField,SelectMultipleField
+from wtforms.validators import DataRequired,Optional,InputRequired
 from flask_wtf import FlaskForm
 from werkzeug.security import generate_password_hash, check_password_hash
 from celery import Celery
 from flask_mail import Mail, Message
-from flask_login import login_required,current_user
-from datetime import datetime,timedelta
+from datetime import datetime
+from celery.schedules import crontab
 import pytz
+
+
 
 
 
@@ -18,6 +20,53 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'qwerasdfzxcv'  
 csrf = CSRFProtect(app)
 
+
+def make_celery(app):
+    celery = Celery(
+        app.import_name,
+        backend=app.config['CELERY_RESULT_BACKEND'],
+        broker=app.config['CELERY_BROKER_URL']
+    )
+    celery.conf.update(app.config)
+
+    class ContextTask(celery.Task):
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return self.run(*args, **kwargs)
+
+    celery.Task = ContextTask
+    return celery
+
+
+app.config.update(
+    CELERY_BROKER_URL='redis://localhost:6379',
+    CELERY_RESULT_BACKEND='redis://localhost:6379',
+    CELERY_TASK_RESULT_EXPIRES=30,
+    CELERY_TIMEZONE='ASIA/KOLKATA',
+    CELERY_ACCEPT_CONTENT=['json', 'msgpack', 'yaml'],
+    CELERY_TASK_SERIALIZER='json',
+    CELERY_RESULT_SERIALIZER='json',
+    # CELERYBEAT_SCHEDULE={
+    #     'dailymail-celery': {
+    #         'task': 'daily_email',
+    #         'schedule': crontab(hour=19,minute=44),
+    #     },
+    #     'weeklymail-celery': {
+    #         'task': 'week_email',
+    #         'schedule': crontab(hour=16,minute=13,day_of_week=1),
+    #     },
+    #     # 'dailyreportmcelery': {
+    #     #     'task': 'daily_report_m',
+    #     #     'schedule': crontab(hour=15,minute=42),
+    #     # },
+    #     # 'dailyreportecelery': {
+    #     #     'task': 'daily_report_e',
+    #     #     'schedule': crontab(hour=17,minute=0),
+    #     # },
+    # }
+)
+
+celery = make_celery(app)
 
 #--------flask login,signup and dashboard---------
 
@@ -44,17 +93,10 @@ sqlhub.processConnection = connection
 User.createTable(ifNotExists=True)
 
 
-@app.route('/')
+@app.route('/', methods=["GET","POST"])
 def home():
-
-    # users = User.select()
-    # for user in users:
-    #     print(f"User ID: {user.id}")
-    #     print(f"Email: {user.email}")
-    #     print(f"Role: {user.role}")
-    #     print("---")
-
     return render_template('home.html')
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -112,7 +154,6 @@ def signup():
 
 
 
-
 @app.route('/logout')
 def logout():
     session.pop('username', None)
@@ -128,304 +169,7 @@ def dashboard():
     user = User.byEmail(session['username'])
     return render_template('dashboard.html',user=user)
 
-
-
-#-------------------------------Task management-----------------------------------------
-
-class TaskData(SQLObject):
-    user_id = IntCol()
-    task_name = StringCol()
-    task_description = StringCol()
-    task_duedate = DateCol()
-    task_priority = StringCol()
-    task_status = StringCol()
-
-    def __repr__(self):
-        return "<TaskData(task_name=%s, task_description=%s,task_duedate=%s,task_priority=%s, task_status=%s, user_id=%d)>" % (
-             self.task_name, self.task_description,self.task_duedate,self.task_priority, self.task_status, self.user_id
-        )
-    
-
-
-TaskData.createTable(ifNotExists=True)
-
-
-#TaskData.dropTable()
-
-@app.route('/task_list')
-def task_list():
-
-    login_user = User.byEmail(session['username'])
-    print(login_user.id)                                     #current user 
-    tasks = TaskData.selectBy(user_id=login_user.id)
-
-    for task in tasks:
-        print(task.task_name)
-
-    return render_template('task_list.html', tasks=tasks)
-
-
-class AddTaskForm(FlaskForm):
-    task_name = StringField('Task Name', validators=[DataRequired()])
-    task_description = TextAreaField('Task Description', validators=[DataRequired()])
-    task_duedate = DateField('Task Due Date', validators=[DataRequired()])
-    task_priority = SelectField('Task Priority', choices=[('L', 'Low'), ('M', 'Medium'), ('H', 'High')], validators=[DataRequired()])
-
-@app.route('/add_task', methods=['GET', 'POST'])
-def add_task():
-    form = AddTaskForm()
-    dummy = ''
-    if form.validate_on_submit():
-        task_name = form.task_name.data
-        task_description = form.task_description.data
-        task_status = "pending"
-        task_duedate = form.task_duedate.data
-        task_priority = form.task_priority.data
-        
-        login_user = User.byEmail(session['username'])
-        print(login_user.email)
-
-        task = TaskData(
-            task_name=task_name,
-            task_description=task_description,
-            task_status=task_status,
-            task_duedate=task_duedate,
-            task_priority=task_priority,
-            user_id=login_user.id
-        )
-
-        return redirect(url_for('task_list'))
-    
-    return render_template('add_task.html', form=form)
-
-
-
-class AssignTask(FlaskForm):
-    assignee_email = StringField('Assignee Email',validators=[DataRequired()])
-    task_name = StringField('Task Name', validators=[DataRequired()])
-    task_description = TextAreaField('Task Description', validators=[DataRequired()])
-    task_duedate = DateField('Task Due Date', validators=[DataRequired()])
-    task_priority = SelectField('Task Priority', choices=[('L', 'Low'), ('M', 'Medium'), ('H', 'High')], validators=[DataRequired()])
-
-@app.route('/assign_task', methods=['GET', 'POST'])
-def assign_task():
-    form = AssignTask()
-    if form.validate_on_submit():
-        assignee_email = form.assignee_email.data
-        task_name = form.task_name.data
-        task_description = form.task_description.data
-        task_status = "pending"
-        task_duedate = form.task_duedate.data
-        task_priority = form.task_priority.data
-        
-        login_user = User.byEmail(session['username'])
-
-        assignee = User.byEmail(assignee_email)
-        print(assignee.id)
-
-        task = TaskData(
-            task_name=task_name,
-            task_description=task_description,
-            task_status=task_status,
-            task_duedate=task_duedate,
-            task_priority=task_priority,
-            user_id = assignee.id
-        )
-
-        return redirect(url_for('task_list'))
-    
-    return render_template('assign_task.html', form=form)
-
-
-class EditTaskForm(FlaskForm):
-    task_name = StringField('Task Name', validators=[DataRequired()])
-    task_description = TextAreaField('Task Description', validators=[DataRequired()])
-    task_duedate = DateField('Task Due Date', validators=[DataRequired()])
-    task_priority = SelectField('Task Priority', choices=[('L', 'Low'), ('M', 'Medium'), ('H', 'High')], validators=[DataRequired()])
-    task_status = StringField('Task Status', validators=[DataRequired()])
-
-@app.route('/edit_task/<int:task_id>', methods=['GET', 'POST'])
-def edit_task(task_id):
-    task = TaskData.get(task_id)
-    form = EditTaskForm(obj=task)
-    if form.validate_on_submit():
-        form.populate_obj(task)
-        return redirect(url_for('task_list'))
-    return render_template('edit_task.html', form=form, task_id=task_id)
-
-
-@app.route('/delete_task/<int:task_id>', methods=['GET', 'POST'])
-def delete_task(task_id):
-    task = TaskData.get(task_id)
-    if task:
-        task.destroySelf()
-    return redirect(url_for('task_list'))
-
-
-#----------------report generation---------
-
-
-@app.route("/system_report")
-def system_report():
-    
-    user = 'chetan'
-    password = 'chetan'
-    port = 22
-    host = '192.168.2.200'
-
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(host, port, user,password)  
-
-    command = "hostname; uname -a; df -h; a; ip addr show eth0; lscpu; lsblk"
-
-
-    #GET http://localhost:5000/system_info?user=laptop-3cn3kh55\yogesh&host=192.168.2.200&port=22
-
-
-    stdin, stdout, stderr = client.exec_command(command)
-    output = stdout.read().decode("utf-8")
-    try:
-        if os.path.exists('systemdata.txt'):
-           os.remove('systemdata.txt')
-           with open('systemdata.txt', 'w', encoding='utf-8') as file:
-                file.write(output)
-    except Exception as e:
-         print("An error occurred while writing to the file:", str(e))
-
-    client.close()
-    
-    #-----output----
-    
-    
-    with open('systemdata.txt', 'r') as file:
-       system_info = file.read()
-
-    architecture_info = re.search(r'(?<=Architecture:)\s*(.*\S)', system_info).group(1).strip()
-
-    processor_info = re.search(r'(?<=Model name:)\s*(.*\S)', system_info).group(1).strip()
-    #---output----
-
-    system_info = {}
-    system_info["Hostname"] = output.splitlines()[0]
-    system_info["Operating_system"] = output.splitlines()[1].split(" ")[0]
-    system_info["OS Version"] = output.splitlines()[1].split(" ")[2]
-    system_info["Processor"] =  processor_info
-    system_info['Architecture'] = architecture_info
-    system_info["ip_address"] = host
-
-    return render_template('system_report.html', system_info=system_info,filename='systemdata.txt')
-
-@app.route("/download_file/<filename>")
-def download_file(filename):
-    return send_file(filename, as_attachment=True)
-
-
-
-
-#----------run script--------
-
-class ScriptData(SQLObject):
-    Runby = StringCol()
-    Filename = StringCol()
-    Language = StringCol()
-    DateTime = DateTimeCol()
-    Status = StringCol()
-
-ScriptData.createTable(ifNotExists=True)
-
-@app.route('/run_script', methods=['GET', 'POST'])
-def run_script():
-    login_user = User.byEmail(session['username'])
-
-    user_name = login_user.email
-
-    script_data = ScriptData.selectBy(Runby=user_name)
-
-    print(script_data)
-
-    if request.method == 'POST':
-        script_file = request.files['script']
-        script_language = request.form['language']
-
-        # supported_languages = {
-        #     'python': ['python', 'script_.py'],
-        #     'go': ['go', 'script_.go'],
-        #     'ruby': ['ruby', 'script_.rb'],
-        #     'java': ['java', 'script_.java'],
-        #     'javascript': ['node', 'script_.js']
-        # }
-
-        if script_file and script_file.filename.endswith('.py'):
-            temp_file = 'script_.py'
-            script_file.save(temp_file)
-
-            try:
-                command = ['python', temp_file]
-                process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                output, error = process.communicate()
-                output = output.decode('utf-8')
-                error = error.decode('utf-8')
-
-                print(process.returncode)       # 0 --> success
-
-                result = 'SUCCESS'
-                if process.returncode:
-                    result = 'FAILED'
-                
-                login_user = User.byEmail(session['username'])
-                print(login_user.email)
-                stat = ScriptData(
-                    Runby=login_user.email,
-                    Filename=script_file.filename,
-                    Language=script_language,
-                    DateTime=datetime.now(),
-                    Status=result,
-                )
-                
-                login_user = User.byEmail(session['username'])
-
-                user_name = login_user.email
-
-                script_data = ScriptData.selectBy(Runby=user_name)
-
-                print(script_data)
-
-
-                return render_template('script_result.html', output=output, error=error, script_data=script_data)
-            except Exception as e:
-                error = str(e)
-                return render_template('script_result.html', error=error)
-
-    return render_template('run_script.html', script_data=script_data)
-
-#-------mail updated------
-
-
-def make_celery(app):
-    celery = Celery(
-        app.import_name,
-        backend=app.config['CELERY_RESULT_BACKEND'],
-        broker=app.config['CELERY_BROKER_URL']
-    )
-    celery.conf.update(app.config)
-
-    class ContextTask(celery.Task):
-        def __call__(self, *args, **kwargs):
-            with app.app_context():
-                return self.run(*args, **kwargs)
-
-    celery.Task = ContextTask
-    return celery
-
-
-app.config.update(
-    CELERY_BROKER_URL='redis://localhost:6379',
-    CELERY_RESULT_BACKEND='redis://localhost:6379'
-)
-celery = make_celery(app)
-
-
+#-----------------Send Mail-------------
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
@@ -437,19 +181,40 @@ app.config['MAIL_DEFAULT_SENDER'] = 'cp258889@gmail.com'
 
 mail = Mail(app)
 
+class Maildata(SQLObject):
+    Sender = StringCol()
+    # Email = StringCol()
+    Recipient = StringCol()
+    Subject = TextAreaField()
+    Body = TextAreaField()
+    Scheduledtime = StringCol()
+    Status = StringCol()
+
+Maildata.createTable(ifNotExists=True)
+
 class Mailbody(FlaskForm):
     email = StringField('Task Name', validators=[DataRequired()])
     Subject = TextAreaField('Subject', validators=[DataRequired()])
     Body = TextAreaField('Body', validators=[DataRequired()])
+    Schedule = DateTimeLocalField('DateTime', format='%Y-%m-%dT%H:%M')
 
 
 @app.route('/mailquick',methods=['GET','POST'])
 def index():
-    form = Mailbody()
+    return render_template('mailbutton.html')
 
+@app.route('/instanmail',methods=['GET','POST'])
+def instantmail():
+    login_user = User.byEmail(session['username'])
+    user_name = login_user.email
+    print(user_name)
+
+    mail_logs = Maildata.selectBy(Sender=user_name)
+    print(mail_logs)
+
+    form = Mailbody()
     if request.method == 'GET':
-        return render_template('index.html', form = form, email=session.get('email', ''))
-    
+        return render_template('instantmail.html', form = form, email=session.get('email', ''),mail_logs=mail_logs)
     if form.validate_on_submit():
         email = form.email.data
         session['email'] = email
@@ -459,44 +224,70 @@ def index():
         email_data = {
             'subject': subject,
             'to': email,
-            'body': body
+            'body': body,
+            'username' : user_name
         }
-        
-        print(email_data)
-        
         
         if request.form['submit'] == 'Send':
             print('its working')
             try:
                 send_async_email.delay(email_data)
-                flash('Sending email to {0}'.format(email))
+                return render_template('index.html', form=form, mail_logs=mail_logs)
+
             except Exception as e:
                 print(e)
-
-        elif request.form['submit'] == 'Send afer 1 Min':
-            send_async_email.apply_async(args=[email_data], countdown=60)
-            flash('An email will be sent to {0} in one minute'.format(email))
         
-        elif request.form['submit'] == 'Schedule Mail':
+        return redirect(url_for('instantmail'))
+    return render_template('instantmail.html', form=form,mail_logs=mail_logs)
+
+
+@app.route('/schedulemail',methods=['GET','POST'])
+def schedulemail():
+    login_user = User.byEmail(session['username'])
+    user_name = login_user.email
+    print(user_name)
+
+    mail_logs = Maildata.selectBy(Sender=user_name)
+    print(mail_logs)
+
+    form = Mailbody()
+    if request.method == 'GET':
+        return render_template('schedulemail.html', form = form, email=session.get('email', ''),mail_logs=mail_logs)
+    if form.validate_on_submit():
+        email = form.email.data
+        session['email'] = email
+        subject = form.Subject.data
+        body = form.Body.data
+        date_time = form.Schedule.data
+        print(date_time)
+
+        email_data = {
+            'subject': subject,
+            'to': email,
+            'body': body,
+            'username' : user_name
+        }
+        
+        if request.form['submit'] == 'Schedule Mail':
             try:
                 india_timezone = pytz.timezone('ASIA/KOLKATA')
-                datetime_input = '2023-6-9 18:59'
-                scheduled_datetime = india_timezone.localize(datetime.strptime(datetime_input, "%Y-%m-%d %H:%M"))
+                #datetime_input = '2023-6-9 18:59'
+                datetime_input = str(date_time)
+                scheduled_datetime = india_timezone.localize(datetime.strptime(datetime_input, "%Y-%m-%d %H:%M:%S"))
 
                 
                 time_difference = scheduled_datetime - datetime.now(india_timezone)
 
                 print(datetime.now(india_timezone))
                 print(time_difference.total_seconds())
-                exit()
                 send_async_email.apply_async(args=[email_data], countdown=time_difference.total_seconds())
-                flash('Email scheduled for {}'.format(scheduled_datetime))
             except Exception as e:
                 print(e)
-         
-        return redirect(url_for('index'))
+        
 
-    return render_template('index.html', form=form)
+        return redirect(url_for('schedulemail'))
+
+    return render_template('schedulemail.html', form=form,mail_logs=mail_logs)
 
 
 @celery.task(name='send_async_email')
@@ -509,13 +300,681 @@ def send_async_email(email_data):
                   recipients=[email_data['to']])
     msg.body = email_data['body']
     with app.app_context():
-         
          try:
+            # print(email_data)
+            maildata = Maildata(
+                    Sender = email_data['username'],
+                    Recipient = email_data['to'],
+                    Subject = email_data['subject'],
+                    Body = email_data['body'],
+                    Scheduledtime = str(datetime.now()),
+                    Status = 'Sent'
+                )
+            
             mail.send(msg)
          except Exception as e:
+            maildata = Maildata(
+                    Sender = email_data['username'] ,
+                    Recipient = email_data['to'],
+                    Subject = email_data['subject'],
+                    Body = email_data['body'],
+                    Scheduledtime = str(datetime.now()),
+                    Status = 'Failed'
+                )
             print(f"An error occurred while sending the email: {str(e)}")
+
+
+
+#----------------report generation---------
+
+class Reportdata(SQLObject):
+    Host = StringCol()
+    Port = IntCol()
+    DateTimeStamp = DateTimeCol()
+    Report = BLOBCol()
+    
+Reportdata.createTable(ifNotExists=True)
+
+@app.route("/system_report",methods=['GET','POST'])
+def system_report():
+    return render_template('reportoptions.html')
+
+
+@app.route("/instantreport",methods=['GET','POST'])
+def instantreport():
+    login_user = User.byEmail(session['username'])
+    
+
+    report_logs = Reportdata.selectBy()
+    print(report_logs)
+
+
+    if request.method == 'POST':
+        user = request.form['user']
+        password = request.form['password']
+        port = int(request.form['port'])
+        host = request.form['host']
+    
+        # user = 'chetan'
+        # password = 'chetan'
+        # port = 22
+        # host = '192.168.2.200'
+        print(password)
+
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        try:
+           client.connect(host, port, user,password)
+        except Exception as e:
+            return render_template('reportgenerror.html',error=e)  
+        command = "hostname; uname -a; df -h; a; ip addr show eth0; lscpu; lsblk"
+        stdin, stdout, stderr = client.exec_command(command)
+        output = stdout.read().decode("utf-8")
+
+        
+        try:
+            if os.path.exists('systemdata.txt'):
+               os.remove('systemdata.txt')
+               with open('systemdata.txt', 'w', encoding='utf-8') as file:
+                    file.write(output)
+        except Exception as e:
+            print("An error occurred while writing to the file:", str(e))
+
+        client.close()
+        
+    
+        with open('systemdata.txt', 'r') as file:
+           system_info = file.read()
+
+        architecture_info = re.search(r'(?<=Architecture:)\s*(.*\S)', system_info).group(1).strip()
+
+        processor_info = re.search(r'(?<=Model name:)\s*(.*\S)', system_info).group(1).strip()
+
+        system_info = {}
+        system_info["Hostname"] = output.splitlines()[0]
+        system_info["Operating_system"] = output.splitlines()[1].split(" ")[0]
+        system_info["OS Version"] = output.splitlines()[1].split(" ")[2]
+        system_info["Processor"] =  processor_info
+        system_info['Architecture'] = architecture_info
+        system_info["ip_address"] = host
+        print('report generated')
+      
+        with open('systemdata.txt', 'rb') as file:
+                report_file = file.read()
+
+                report_d = Reportdata(
+                    Host = host,
+                    Port = port,
+                    DateTimeStamp = datetime.now(),
+                    Report = report_file
+                )
+
+        return render_template('system_report.html', system_info=system_info,filename='systemdata.txt',report_logs=report_logs)
+    
+    return render_template('reportform.html',report_logs=report_logs)
+
+#---report file for instant report---
+
+@app.route("/download_report/<filename>")
+def download_file(filename):
+    return send_file(filename, as_attachment=True)
+
+
+
+class ReportCred(FlaskForm):
+    user = StringField('Username', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    port = IntegerField('Port', validators=[DataRequired()])
+    host = StringField('Host',validators=[DataRequired()])
+    schedule = DateTimeLocalField('DateTime', format='%Y-%m-%dT%H:%M')    
+
+
+
+@app.route("/schedulereport", methods=['GET', 'POST'])
+def schedulereport():
+    login_user = User.byEmail(session['username'])
+    report_logs = Reportdata.selectBy()
+    print(report_logs)
+
+
+    form = ReportCred()
+    if form.validate_on_submit():
+        user = form.user.data
+        # session['email'] = email
+        password = form.password.data
+        port = form.port.data
+        host = form.host.data
+        date_time = form.schedule.data
+        
+
+        report_cred = {
+            'user': user,
+            'password': password,
+            'port': port,
+            'host': host
+        }
+        
+        print(request.form['submit'])
+        if request.form['submit'] == 'Schedule Report':
+            try:
+                india_timezone = pytz.timezone('ASIA/KOLKATA')
+                datetime_input = str(date_time)
+                scheduled_datetime = india_timezone.localize(datetime.strptime(datetime_input, "%Y-%m-%d %H:%M:%S"))
+
+                
+                time_difference = scheduled_datetime - datetime.now(india_timezone)
+
+                print(datetime.now(india_timezone))
+                print(time_difference.total_seconds())
+                result = generate_system_report.apply_async(args=[report_cred], countdown=time_difference.total_seconds())
+                return render_template('reportontime.html', form=form,report_logs=report_logs)
+
+            except Exception as e:
+                print(e)
+
+        return redirect(url_for('schedulereport'))
+
+    return render_template('reportontime.html',form=form,report_logs=report_logs)
+
+
+@celery.task(name='generate_system_report')
+def generate_system_report(report_cred):
+        
+        print('enter')
+        host = report_cred['host']
+        port = report_cred['port']
+        user = report_cred['user']
+        password  = report_cred['password']
+
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        try:
+           client.connect(host, port, user,password)  
+        except Exception as e:
+            print(e)
+
+        command = "hostname; uname -a; df -h; a; ip addr show eth0; lscpu; lsblk"
+
+        stdin, stdout, stderr = client.exec_command(command)
+        output = stdout.read().decode("utf-8")
+        try:
+            if os.path.exists('systemdata.txt'):
+               os.remove('systemdata.txt')
+               with open('systemdata.txt', 'w', encoding='utf-8') as file:
+                    file.write(output)
+        except Exception as e:
+            print("An error occurred while writing to the file:", str(e))
+
+        client.close()
+       
+        print('reached')
+        try:
+           with open('systemdata.txt', 'rb') as file:
+                report_file = file.read()
+        except Exception as e:
+            print(e)
+         
+        data = Reportdata(
+            Host=host,
+            Port=port,
+            DateTimeStamp=datetime.now(),
+            Report=report_file
+        )
+
+
+@app.route('/download_reportfile/<int:report_id>',methods=['GET','POST'])
+def download_reportfile(report_id):
+    report = Reportdata.selectBy(id=report_id).getOne(None)
+    print(report.Host)
+    if report:
+        response = make_response(report.Report)
+        response.headers.set('Content-Type', 'application/octet-stream')
+        response.headers.set('Content-Disposition', 'attachment', filename='report.txt')
+        return response
+
+    
+
+
+
+#----------run script--------
+class ScriptData(SQLObject):
+    Runby = StringCol()
+    Filename = StringCol()
+    Scriptcode = BLOBCol()
+    Scriptreport = BLOBCol()
+    Language = StringCol()
+    DateTime = DateTimeCol()
+    Status = StringCol()
+
+ScriptData.createTable(ifNotExists=True)
+
+
+@app.route('/runscriptoptions',methods=['GET','POST'])
+def runscriptoptions():
+    return render_template('runscriptoptions.html')
+
+@app.route('/run_script', methods=['GET', 'POST'])
+def run_script():
+
+    login_user = User.byEmail(session['username'])
+
+    user_name = login_user.email
+
+    script_data = ScriptData.selectBy(Runby=user_name)
+
+    save_folder = r'C:\Users\yoges\OneDrive\Desktop\intern\TaskSchedule\scriptsfolder'
+    
+    
+
+    if request.method == 'POST':
+        script_file = request.files['script']
+        script_language = request.form['language']
+
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")  
+        filename = f"{timestamp}_{login_user.id}_{script_file.filename}"
+        file_path = os.path.join(save_folder, filename)
+        script_file.save(file_path)
+        
+    
+        with open(file_path, 'rb') as file:
+            script_code = file.read()  
+
+        if script_file and script_language=='python':
+
+            try:
+                command = ['python', file_path]
+                process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                output, error = process.communicate()
+                
+                
+
+                
+                
+                print(process.returncode) 
+
+                if process.returncode:  
+                    stat = ScriptData(
+                        Runby=login_user.email,
+                        Filename=script_file.filename,
+                        Scriptcode = script_code,
+                        Scriptreport = error ,
+                        Language=script_language,
+                        DateTime=datetime.now(),
+                        Status='FAILED',
+                    )
+                else:
+                    stat = ScriptData(
+                        Runby=login_user.email,
+                        Filename=script_file.filename,
+                        Scriptcode = script_code,
+                        Scriptreport = output  ,
+                        Language=script_language,
+                        DateTime=datetime.now(),
+                        Status='SUCCESS',
+                    )
+
+                output = output.decode('utf-8')
+                error = error.decode('utf-8')
+                return render_template('script_result.html',output=output,error=error,script_data=script_data)
+
+
+            except Exception as e:
+                print(e)
+
+
+        elif script_file and script_language=='go':
+
+            try:
+                command = ['go','run', file_path]
+                process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                output, error = process.communicate()
+               
+
+                print(process.returncode)   
+
+            
+                if process.returncode:  
+                    stat = ScriptData(
+                        Runby=login_user.email,
+                        Filename=script_file.filename,
+                        Scriptcode = script_code,
+                        Scriptreport = error ,
+                        Language=script_language,
+                        DateTime=datetime.now(),
+                        Status='FAILED',
+                    )
+                else:
+                    stat = ScriptData(
+                        Runby=login_user.email,
+                        Filename=script_file.filename,
+                        Scriptcode = script_code,
+                        Scriptreport = output  ,
+                        Language=script_language,
+                        DateTime=datetime.now(),
+                        Status='SUCCESS',
+                    )
+                output = output.decode('utf-8')
+                error = error.decode('utf-8')
+                return render_template('script_result.html',output=output,error=error,script_data=script_data)
+            
+            except Exception as e:
+                error = str(e)
+
+        
+        elif script_file and script_language=='java':
+
+            try:
+                compile_command = ['javac', file_path]
+                compile_process = subprocess.Popen(compile_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                compile_output, compile_error = compile_process.communicate()
+                compile_output = compile_output.decode('utf-8')
+                compile_error = compile_error.decode('utf-8')
+
+                
+                if compile_process.returncode == 0:
+                    class_name = file_path.split('.')[0]
+                    command = ['java', class_name]
+                    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    output, error = process.communicate()
+                else:
+                    output = ''
+                    error = compile_error
+                
+
+                if process.returncode:  
+                    stat = ScriptData(
+                        Runby=login_user.email,
+                        Filename=script_file.filename,
+                        Scriptcode = script_code,
+                        Scriptreport = error ,
+                        Language=script_language,
+                        DateTime=datetime.now(),
+                        Status='FAILED',
+                    )
+                else:
+                    stat = ScriptData(
+                        Runby=login_user.email,
+                        Filename=script_file.filename,
+                        Scriptcode = script_code,
+                        Scriptreport = output  ,
+                        Language=script_language,
+                        DateTime=datetime.now(),
+                        Status='SUCCESS',
+                    )
+
+                output = output.decode('utf-8')
+                error = error.decode('utf-8')
+                return render_template('script_result.html',output=output,error=error,script_data=script_data)
+
+            except Exception as e:
+                error = str(e)
+
+        elif script_file and script_language=='javascript':
+
+            try:
+                command = ['node', file_path]
+                process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                output, error = process.communicate()
+
+                print(process.returncode)   
+
+                
+                if process.returncode:  
+                    stat = ScriptData(
+                        Runby=login_user.email,
+                        Filename=script_file.filename,
+                        Scriptcode = script_code,
+                        Scriptreport = error ,
+                        Language=script_language,
+                        DateTime=datetime.now(),
+                        Status='FAILED',
+                    )
+                else:
+                    stat = ScriptData(
+                        Runby=login_user.email,
+                        Filename=script_file.filename,
+                        Scriptcode = script_code,
+                        Scriptreport = output  ,
+                        Language=script_language,
+                        DateTime=datetime.now(),
+                        Status='SUCCESS',
+                    )
+
+                output = output.decode('utf-8')
+                error = error.decode('utf-8')
+                return render_template('script_result.html',output=output,error=error,script_data=script_data)
+
+            except Exception as e:
+                print(e)
+
+
+    return render_template('run_script.html', script_data=script_data)
+
+
+
+@app.route('/download_script/<script_id>')
+def download_scriptcode(script_id):
+    script = ScriptData.selectBy(id=script_id).getOne(None)
+    response = make_response(script.Scriptcode)
+    response.headers.set('Content-Type', 'application/octet-stream')
+    response.headers.set('Content-Disposition', 'attachment', filename='code.txt')
+    return response
+
+@app.route('/download_scriptreport/<script_id>')
+def download_scriptreport(script_id):
+    script = ScriptData.selectBy(id=script_id).getOne(None)
+    response = make_response(script.Scriptreport)
+    response.headers.set('Content-Type', 'application/octet-stream')
+    response.headers.set('Content-Disposition', 'attachment', filename='report.txt')
+    return response
+
+
+
+#------------Schedule Run Script---------
+
+class RunScriptForm(FlaskForm):
+    script = FileField('Select Script File', validators=[InputRequired()])
+    language = SelectField('Select Script Language', choices=[
+        ('python', 'Python'),
+        ('go', 'Go'),
+        ('ruby', 'Ruby'),
+        ('java', 'Java'),
+        ('javascript', 'JavaScript')
+    ])
+    schedule = DateTimeLocalField('Date and Time', format='%Y-%m-%dT%H:%M', validators=[InputRequired()])
+
+
+@app.route('/schedulerunscript', methods=['GET', 'POST'])
+def schedulerunscript():
+
+    login_user = User.byEmail(session['username'])
+    user_name = login_user.email
+    script_data = ScriptData.selectBy(Runby=user_name)
+    save_folder = r'C:\Users\yoges\OneDrive\Desktop\intern\TaskSchedule\scriptsfolder'
+
+    form = RunScriptForm()
+    if form.validate_on_submit():
+        script_file = form.script.data
+        language = form.language.data
+        schedule = form.schedule.data
+        
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")  
+        filename = f"{timestamp}_{login_user.id}_{script_file.filename}"
+        file_path = os.path.join(save_folder, script_file.filename)
+        script_file.save(file_path)
+
+        scriptinfo = { 'scriptpath' : file_path,'scriptlang' : language,'useremail':user_name,'filename' : script_file.filename }
+
+        if request.form['submit'] == 'Run Script':
+            try:
+                india_timezone = pytz.timezone('ASIA/KOLKATA')
+                print(india_timezone)
+                datetime_input = str(schedule)
+
+                scheduled_datetime = india_timezone.localize(datetime.strptime(datetime_input, "%Y-%m-%d %H:%M:%S"))
+                time_difference = scheduled_datetime - datetime.now(india_timezone)
+                
+                
+                runscriptinfuture.apply_async(args=[scriptinfo], countdown=time_difference.total_seconds())
+            except Exception as e:
+                print(e)
+        
+        return redirect(url_for('schedulerunscript'))
+
+    return render_template('runscriptschedule.html',form=form)
+
+@celery.task(name='runscriptinfuture')
+def runscriptinfuture(scriptinfo):
+
+    with open(scriptinfo['scriptpath'], 'rb') as file:
+        script_code = file.read()
+
+    
+    if scriptinfo['scriptlang'] == 'python':
+
+        try:
+            command = ['python', scriptinfo['scriptpath']]
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            output, error = process.communicate()
+            
+            if process.returncode:  
+                stat = ScriptData(
+                    Runby=scriptinfo['useremail'],
+                    Filename=scriptinfo['filename'],
+                    Scriptcode = script_code,
+                    Scriptreport = error ,
+                    Language=scriptinfo['scriptlang'],
+                    DateTime=datetime.now(),
+                    Status='FAILED',
+                )
+            else:
+                stat = ScriptData(
+                    Runby=scriptinfo['useremail'],
+                    Filename=scriptinfo['filename'],
+                    Scriptcode = script_code,
+                    Scriptreport = output ,
+                    Language=scriptinfo['scriptlang'],
+                    DateTime=datetime.now(),
+                    Status='SUCCESS',
+                )
+
+
+        except Exception as e:
+           print(e)
+    
+    if scriptinfo['scriptlang'] == 'go':
+        try:
+            command = ['go','run', scriptinfo['scriptpath']]
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            output, error = process.communicate()
+ 
+            if process.returncode:  
+                stat = ScriptData(
+                    Runby=scriptinfo['useremail'],
+                    Filename=scriptinfo['filename'],
+                    Scriptcode = script_code,
+                    Scriptreport = error ,
+                    Language=scriptinfo['scriptlang'],
+                    DateTime=datetime.now(),
+                    Status='FAILED',
+                )
+            else:
+                stat = ScriptData(
+                    Runby=scriptinfo['useremail'],
+                    Filename=scriptinfo['filename'],
+                    Scriptcode = script_code,
+                    Scriptreport = output ,
+                    Language=scriptinfo['scriptlang'],
+                    DateTime=datetime.now(),
+                    Status='SUCCESS',
+                )
+        except Exception as e:
+            print(e)
+
+    if scriptinfo['scriptlang'] == 'java':
+        try:
+                compile_command = ['javac', scriptinfo['scriptpath']]
+                compile_process = subprocess.Popen(compile_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                compile_output, compile_error = compile_process.communicate()
+                compile_output = compile_output.decode('utf-8')
+                compile_error = compile_error.decode('utf-8')
+
+                
+                if compile_process.returncode == 0:
+                    class_name = scriptinfo['scriptpath'].split('.')[0]
+                    command = ['java', class_name]
+                    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    output, error = process.communicate()
+                else:
+                    output = ''
+                    error = compile_error
+
+                if process.returncode:  
+                    stat = ScriptData(
+                        Runby=scriptinfo['useremail'],
+                        Filename=scriptinfo['filename'],
+                        Scriptcode = script_code,
+                        Scriptreport = error ,
+                        Language=scriptinfo['scriptlang'],
+                        DateTime=datetime.now(),
+                        Status='FAILED',
+                    )
+                else:
+                    stat = ScriptData(
+                        Runby=scriptinfo['useremail'],
+                        Filename=scriptinfo['filename'],
+                        Scriptcode = script_code,
+                        Scriptreport = output ,
+                        Language=scriptinfo['scriptlang'],
+                        DateTime=datetime.now(),
+                        Status='SUCCESS',
+                    )
+
+        except Exception as e:
+            print(e)
+
+    if scriptinfo['scriptlang'] == 'javascript':
+        try:
+            command = ['node', scriptinfo['scriptpath']]
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            output, error = process.communicate()
+
+
+            if process.returncode:  
+                    stat = ScriptData(
+                        Runby=scriptinfo['useremail'],
+                        Filename=scriptinfo['filename'],
+                        Scriptcode = script_code,
+                        Scriptreport = error ,
+                        Language=scriptinfo['scriptlang'],
+                        DateTime=datetime.now(),
+                        Status='FAILED',
+                       )
+            else:
+                stat = ScriptData(
+                    Runby=scriptinfo['useremail'],
+                    Filename=scriptinfo['filename'],
+                    Scriptcode = script_code,
+                    Scriptreport = output ,
+                    Language=scriptinfo['scriptlang'],
+                    DateTime=datetime.now(),
+                    Status='SUCCESS',
+                )
+                
+        
+
+        except Exception as e:
+            print(e)
+
+
+
+
 
 
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+
+

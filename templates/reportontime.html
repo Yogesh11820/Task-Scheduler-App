@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Schedule Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        form {
+            max-width: 400px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="datetime-local"] {
+            width: 90%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        input[type="submit"] {
+            width: 40%;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        .back-button {
+            display: flex;
+            margin-top: 20px;
+        }
+
+        .back-button a {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #ddd;
+            color: #333;
+            text-decoration: none;
+            border-radius: 3px;
+        }
+
+        .back-button a:hover {
+            background-color: #ccc;
+        }
+        .toggle-button {
+            margin-top: 10px;
+        }
+
+        .toggle-button button {
+            display: inline-block;
+            background-color: #3b477c;
+            color: #fff;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: none;
+            cursor: pointer;
+        }
+
+        .toggle-button button:hover {
+            background-color: #4a5584;
+        }
+
+        .toggle-button button:active {
+            background-color: #18222c;
+        }
+
+        .toggle-button button:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(33, 50, 68, 0.4);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Schedule Report</h1>
+    <form action="{{ url_for('schedulereport') }}" method="POST">
+        {{ form.csrf_token }}
+        <label for="user">Username:</label>
+        <input type="text" name="user" id="user" required><br><br>
+
+        <label for="password">Password:</label>
+        <input type="password" name="password" id="password" required><br><br>
+
+        <label for="port">Port:</label>
+        <input type="number" name="port" id="port" required><br><br>
+
+        <label for="host">Host:</label>
+        <input type="text" name="host" id="host" required><br><br>
+
+        <label for="schedule">Date and Time:</label>
+        <input type="datetime-local" name="schedule" id="schedule" required><br><br>
+
+        <input type="submit" name="submit" value="Schedule Report">
+        <div class="back-button">
+            <a class="back" href="{{ url_for('system_report') }}">Back</a>
+        </div>
+    </form>
+    <div id="myDiv" class="toggleable-div" style="display:none">
+        <h1>Report Logs</h1>
+        <table>
+            <tr>
+                <th>Id</th>
+                <th>Host</th>
+                <th>Port</th>
+                <th>DateTimeStamp</th>
+                <th>ReportFile</th>
+            </tr>
+            {% for report in report_logs %}
+            <tr>
+                <td>{{report.id}}</td>
+                <td>{{ report.Host }}</td>
+                <td>{{ report.Port }}</td>
+                <td>{{ report.DateTimeStamp }}</td>
+                <td><div class="download-button">
+                    <a href="{{ url_for('download_reportfile', report_id=report.id) }}">Download Report</a>
+                </div>   </td>         </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <div class="toggle-button">
+        <button onclick="toggleDiv()">Report Logs</button>
+    </div>
+    <br>    
+    <script>
+        function toggleDiv() {
+            var div = document.getElementById("myDiv");
+            if (div.style.display === "none") {
+                div.style.display = "block";
+            } else {
+                div.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>

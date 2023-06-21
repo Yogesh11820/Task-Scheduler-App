@@ -135,7 +135,7 @@
       </ul>
     {% endif %}
   {% endwith %}
-  <form method="POST" action="{{ url_for('index') }}">
+  <form method="POST" action="{{ url_for('instantmail') }}">
     {{ form.csrf_token }}
     <div>
       <label for="email">Email</label>
@@ -149,20 +149,8 @@
       <label for="body">Body</label>
       {{ form.Body(class="form-control", id="body") }}
     </div>
-    <div>
-      <label for="Schedule">Date & Time</label>
-      {{ form.Schedule(class="form-control", id="Schedule") }}
-    </div>
     <br>
     <button type="submit" name="submit" value="Send" class="btn btn-primary">Send</button>
-    <!-- <button type="submit" name="submit" value="Send after 1 Min" class="btn btn-secondary">Send after 1 Min</button> -->
-    <button type="submit" name="submit" value="Schedule Mail" class="btn btn-secondary">Schedule Mail</button>
-    <div class="back-button">
-      <a href="{{ url_for('custommail') }}">Schedule Daily Mail</a>
-  </div>
-  <div class="back-button">
-    <a href="{{ url_for('weekmail') }}">Schedule Weekly Mail</a>
-</div>
   </form>
   <div id="myDiv" class="toggleable-div" style="display:none">
     <h1>Mail History</h1>
@@ -186,7 +174,7 @@
     </table>
 </div>
 <div class="toggle-button">
-    <button onclick="toggleDiv()">Mail History</button>
+    <button onclick="toggleDiv()">Mail Logs</button>
 </div>
 <br>    
 <script>
@@ -200,7 +188,7 @@
     }
 </script>
   <div class="back-button">
-    <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+    <a href="{{ url_for('index') }}">Back</a>
 </div>
 </body>
 </html>
